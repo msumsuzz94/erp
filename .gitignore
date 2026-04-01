@@ -1,0 +1,51 @@
+# Temporary files
+tmp/
+*.tmp
+
+# Logs
+logs/
+debug.txt
+*.log
+
+# Uploads (user-generated content)
+uploads/*
+!uploads/.gitkeep
+
+# Backups
+backups/*
+!backups/.gitkeep
+
+# Storage
+storage/*
+!storage/.gitkeep
+
+# OS generated files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test & debug files
+test_*.php
+temp.php
+temp_*.php
+check_curr.php
+check_curr2.php
+diag_*.php
+list_inserts.php
+insert_list.txt
+user_insert.txt
+test_party_output.txt
+salary_out.html
+media_url.txt
+
+# SQL dumps (keep clean one if needed)
+business_pos.sql
+
+# Sensitive config (uncomment if config contains credentials)
+# config/config.php

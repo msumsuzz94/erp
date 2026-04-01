@@ -1,0 +1,433 @@
+/* ============================================
+   RESPONSIVE CSS - Mobile, Tablet & Desktop
+   ============================================ */
+
+/* ---- Mobile Overlay Backdrop ---- */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
+/* ============================================
+   TABLETS (max-width: 991px)
+   ============================================ */
+@media (max-width: 991.98px) {
+
+    /* Sidebar: hidden by default, overlay when open */
+    #sidebar {
+        margin-left: calc(-1 * var(--sidebar-width));
+        position: fixed;
+        z-index: 1050;
+    }
+
+    #sidebar.active {
+        margin-left: 0;
+    }
+
+    /* Content: full width always */
+    #content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    #content.active {
+        margin-left: 0;
+    }
+
+    /* Topbar adjustments */
+    .topbar {
+        padding: 10px 15px;
+    }
+
+    .topbar .text-muted.me-3 {
+        /* date text */
+        display: none;
+    }
+
+    /* Card spacing */
+    .card {
+        margin-bottom: 15px;
+    }
+
+    /* Container padding */
+    .container-fluid.px-4 {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    /* Page heading */
+    .d-sm-flex.align-items-center.justify-content-between.mb-4 {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+
+    .d-sm-flex.align-items-center.justify-content-between.mb-4>div:last-child {
+        width: 100%;
+    }
+
+    .d-sm-flex.align-items-center.justify-content-between.mb-4>div:last-child .btn {
+        width: 100%;
+    }
+
+    /* Tables: horizontal scroll */
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dataTables_wrapper .row:first-child,
+    .dataTables_wrapper .row:last-child {
+        flex-direction: column;
+    }
+
+    .dataTables_wrapper .row:first-child>div,
+    .dataTables_wrapper .row:last-child>div {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    /* DataTables search/length */
+    .dataTables_filter {
+        text-align: left !important;
+    }
+
+    .dataTables_filter input {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    /* Modal full-width on tablet */
+    .modal-dialog {
+        max-width: 95%;
+        margin: 10px auto;
+    }
+
+    /* Dashboard stat cards */
+    .card-stat .card-body .row .col-auto {
+        display: none;
+        /* Hide icons on smaller tablets */
+    }
+}
+
+/* ============================================
+   MOBILE PHONES (max-width: 767px)
+   ============================================ */
+@media (max-width: 767.98px) {
+    body {
+        font-size: 0.85rem;
+    }
+
+    /* Sidebar: narrower on mobile */
+    #sidebar {
+        min-width: 260px;
+        max-width: 260px;
+    }
+
+    /* Topbar */
+    .topbar {
+        padding: 8px 10px;
+        margin-bottom: 15px;
+    }
+
+    .topbar .btn-primary.btn-sm {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+
+    .topbar .btn-primary.btn-sm span,
+    .topbar .btn-primary.btn-sm .d-none {
+        display: none !important;
+    }
+
+    /* Page title smaller */
+    h1.h3 {
+        font-size: 1.1rem !important;
+    }
+
+    /* Container minimal padding */
+    .container-fluid.px-4 {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    /* Stack form columns */
+    .row>[class*="col-md-"],
+    .row>[class*="col-lg-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Cards compact */
+    .card {
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+
+    .card-header {
+        padding: 0.6rem 0.9rem;
+        font-size: 0.85rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    /* Buttons: larger touch targets */
+    .btn {
+        min-height: 38px;
+        font-size: 0.82rem;
+    }
+
+    .btn-sm {
+        min-height: 32px;
+        padding: 4px 10px;
+    }
+
+    /* Tables: compact on mobile */
+    .table {
+        font-size: 0.78rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 6px 8px;
+        white-space: nowrap;
+    }
+
+    /* Forms: larger inputs for touch */
+    .form-control,
+    .form-select {
+        font-size: 0.85rem;
+        min-height: 40px;
+    }
+
+    .form-label {
+        font-size: 0.82rem;
+        margin-bottom: 4px;
+    }
+
+    /* Select2 touch-friendly */
+    .select2-container .select2-selection--single {
+        min-height: 40px !important;
+    }
+
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+    }
+
+    /* Badge smaller */
+    .badge {
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+
+    /* Modals full screen on mobile */
+    .modal-dialog {
+        max-width: 100%;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    .modal-content {
+        border-radius: 0;
+        min-height: 100vh;
+    }
+
+    /* Page actions: stack buttons */
+    .page-actions .btn,
+    [class*="page_actions"] .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    /* Dashboard stats: 2 columns */
+    .row>[class*="col-xl-3"],
+    .row>[class*="col-md-3"] {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    /* Topbar notification dropdown */
+    .dropdown-menu-end {
+        right: -60px !important;
+        width: 280px;
+    }
+
+    /* POS button text */
+    .topbar .btn-primary span {
+        display: none;
+    }
+}
+
+/* ============================================
+   SMALL PHONES (max-width: 480px)
+   ============================================ */
+@media (max-width: 480px) {
+    body {
+        font-size: 0.8rem;
+    }
+
+    /* Even narrower sidebar */
+    #sidebar {
+        min-width: 240px;
+        max-width: 240px;
+    }
+
+    #sidebar ul li a {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+
+    #sidebar .sidebar-header {
+        padding: 12px 15px;
+    }
+
+    #sidebar .sidebar-header h3 {
+        font-size: 1.05rem;
+    }
+
+    /* Topbar minimal */
+    .topbar {
+        padding: 6px 8px;
+    }
+
+    #sidebarCollapse {
+        padding: 4px 8px;
+        font-size: 0.85rem;
+    }
+
+    /* Stats: single column */
+    .row>[class*="col-xl-3"],
+    .row>[class*="col-md-3"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Cards: even more compact */
+    .card-body {
+        padding: 0.5rem;
+    }
+
+    /* Table font even smaller */
+    .table {
+        font-size: 0.72rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 4px 6px;
+    }
+
+    /* h1 title */
+    h1.h3 {
+        font-size: 0.95rem !important;
+    }
+
+    /* Modal: full screen */
+    .modal-dialog {
+        margin: 0;
+    }
+}
+
+/* ============================================
+   LANDSCAPE MOBILE (special handling)
+   ============================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+    .topbar {
+        padding: 5px 10px;
+        margin-bottom: 10px;
+    }
+
+    .card {
+        margin-bottom: 10px;
+    }
+
+    #sidebar .sidebar-header {
+        padding: 10px 15px;
+    }
+}
+
+/* ============================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+
+    /* Larger click/tap targets */
+    .btn {
+        min-height: 42px;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+    }
+
+    /* Remove hover effects that don't work on touch */
+    .card:hover {
+        transform: none !important;
+    }
+
+    /* Larger checkboxes/radios */
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+    }
+
+    /* Scrollable tables with momentum */
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+        overflow-x: auto;
+    }
+
+    /* Fix Select2 dropdown on touch */
+    .select2-dropdown {
+        font-size: 16px !important;
+        /* Prevents iOS zoom */
+    }
+
+    /* Prevent iOS zoom on input focus */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ============================================
+   PRINT: HIDE RESPONSIVE ELEMENTS
+   ============================================ */
+@media print {
+    .sidebar-overlay {
+        display: none !important;
+    }
+
+    #sidebar {
+        display: none !important;
+    }
+
+    #content {
+        margin-left: 0 !important;
+    }
+
+    .topbar {
+        display: none !important;
+    }
+}

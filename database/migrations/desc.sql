@@ -1,0 +1,1 @@
+DESCRIBE menu_items;

@@ -1,0 +1,5 @@
+Code,Name,Category,Brand,Unit,Purchase Price,Selling Price,Tax Rate,Stock,Reorder Level,Status,Description
+LP-001,MacBook Pro M3,Laptops,Apple,Pcs,1500,2200,15,50,5,active,High-performance laptop
+PH-002,iPhone 15 Pro,Smartphones,Apple,Pcs,999,1299,12,30,3,active,Latest flagship smartphone
+MO-003,Dell 27 Monitor,Accessories,Dell,Pcs,200,350,10,20,5,active,27 inch 4K monitor
+KB-004,Logitech MX Keys,Accessories,Logitech,Pcs,80,120,5,15,2,active,Bluetooth mechanical keyboard

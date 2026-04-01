@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - ERP System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fc;
+            color: #5a5c69;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 64px;
+            color: #d1d3e2;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #4e73df;
+            margin-bottom: 10px;
+        }
+
+        p {
+            max-width: 400px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: #2e59d9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="icon">📡</div>
+    <h1>You are offline</h1>
+    <p>It looks like you've lost your network connection, or the main server PC is currently unreachable.<br><br>Please
+        check your WiFi connection or ensure the main PC server is running.</p>
+    <button class="btn" onclick="window.location.reload()">Try Again</button>
+</body>
+
+</html>

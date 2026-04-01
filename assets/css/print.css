@@ -1,0 +1,252 @@
+/* ==========================================================================
+   Standardized Print Styles
+   ========================================================================== */
+
+@media print {
+
+    /* Reset page margins to user-requested 0.25cm */
+    @page {
+        margin: 0.25cm;
+        size: auto;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 12px;
+        /* Increased from 11px */
+        color: #000 !important;
+        /* Enforce solid black text */
+    }
+
+    /* Hide regular UI elements */
+    .no-print,
+    .navbar,
+    .sidebar,
+    #sidebar,
+    nav#sidebar,
+    .topbar,
+    .topbar-nav,
+    .btn:not(.print-visible),
+    .card-header.py-3,
+    .card-footer,
+    footer,
+    .footer,
+    #footer,
+    #accordionSidebar,
+    .summary-cards,
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate,
+    .dataTables_wrapper .dt-buttons,
+    .select2-container,
+    .alert,
+    .alert-dismissible,
+    .pagination,
+    .page-item,
+    .modal,
+    .modal-backdrop,
+    form:not(.print-visible),
+    /* List page specific: hide filter cards, action sections, page headings */
+    .card.shadow.mb-4:has(form),
+    .card.border-left-danger,
+    .card.shadow.mb-4 .card-header+.card-body>form,
+    .d-sm-flex.align-items-center.justify-content-between.mb-4,
+    .border-left-danger,
+    .border-left-primary,
+    .print-header {
+        display: none !important;
+    }
+
+    /* Standardized Print Header (Hidden on screen) */
+    #standard-print-wrapper {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 10px 0 !important;
+        box-sizing: border-box;
+    }
+
+    /* Standardized Report Title */
+    .standard-report-title {
+        text-align: center;
+        font-size: 16px;
+        color: #000;
+        font-weight: 700;
+        margin: 10px 0 5px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #999;
+    }
+
+    .print-subtitle {
+        text-align: center;
+        font-size: 11px;
+        color: #555;
+        margin: 0 0 10px;
+    }
+
+    /* Header Table Layout */
+    .header-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+        border: none !important;
+    }
+
+    .header-table td {
+        vertical-align: middle;
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    .logo-cell {
+        width: 15%;
+        text-align: left;
+    }
+
+    .logo-cell img {
+        max-width: 150px;
+        height: auto;
+        display: block;
+    }
+
+    .company-cell {
+        width: 55%;
+        text-align: center;
+    }
+
+    .company-name {
+        font-size: 26px;
+        font-weight: 900;
+        color: #000;
+        margin: 0;
+        text-transform: uppercase;
+        line-height: 1.1;
+    }
+
+    .company-slogan {
+        font-size: 13px;
+        color: #000;
+        font-weight: bold;
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .contact-cell {
+        width: 30%;
+        text-align: right;
+        font-size: 13px;
+        color: #000;
+        line-height: 1.6;
+    }
+
+    .contact-cell p {
+        margin: 2px 0;
+    }
+
+    .contact-cell strong {
+        font-weight: 700;
+    }
+
+    /* Fix Content Area Margins */
+    #content,
+    .container-fluid,
+    .wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+        /* Override 1.5cm padding to claim full page */
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        margin-bottom: 0 !important;
+        background: transparent !important;
+    }
+
+    .card-body {
+        padding: 0 !important;
+    }
+
+    /* Ensure table-responsive scrolling is disabled for print */
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    /* Hide action buttons inside tables */
+    .table .btn {
+        display: none !important;
+    }
+
+    /* Table Adjustments */
+    .table {
+        color: #000 !important;
+    }
+
+    .table-bordered {
+        border: 1px solid #000 !important;
+    }
+
+    .table-bordered th,
+    .table-bordered td,
+    .table th,
+    .table td {
+        border: 1px solid #000 !important;
+        padding: 6px !important;
+        color: #000 !important;
+    }
+
+    .table thead th {
+        background-color: #e0e0e0 !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Standardized Print Footer */
+    #standard-print-footer {
+        position: fixed;
+        bottom: 0.25cm;
+        left: 0.25cm;
+        right: 0.25cm;
+        border-top: 1px solid #000;
+        padding-top: 10px;
+        font-size: 11px;
+        color: #000 !important;
+        display: block !important;
+        background: #fff !important;
+        z-index: 9999;
+    }
+
+    .footer-left {
+        float: left;
+        width: 50%;
+        font-weight: bold;
+    }
+
+    .footer-right {
+        float: right;
+        width: 50%;
+        text-align: right;
+    }
+
+    .clearfix::after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+}
+
+/* Screen visibility - Hidden */
+#standard-print-wrapper,
+#standard-print-footer {
+    display: none;
+}

@@ -1,0 +1,11 @@
+2026-03-04 20:34:58 - POST DATA: Array
+(
+    [csrf_token] => 62d8b7129db0482cc01511fa097241ff2875035f9e0fad6fe991944e8e2d79b0
+    [items_json] => [{"product_id":41,"product_name":"Aptech X25 XPON ONU","product_code":"PRD1770559028","unit_price":1250,"quantity":1},{"product_id":78,"product_name":"Adata UV128 USB 3.2 128GB Pendrive","product_code":"PRD1770697283","unit_price":1350,"quantity":1}]
+    [customer_id] => 
+    [customer_name] => Zaman Ali
+    [customer_phone] => 01516793351
+    [notes] => Please Check 
+    [discount] => 200
+)
+

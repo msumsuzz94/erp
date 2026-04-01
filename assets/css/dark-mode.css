@@ -1,0 +1,246 @@
+﻿/* ============================================
+   DARK MODE SELECT2 & TABLE OVERRIDES
+   ============================================ */
+
+/* Select2 Container */
+[data-theme="dark"] .select2-container--bootstrap-5 .select2-selection {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap-5 .select2-selection .select2-selection__rendered {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .select2-container--bootstrap-5 .select2-selection--multiple .select2-search__field {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .select2-dropdown {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .select2-search--dropdown .select2-search__field {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Modals */
+[data-theme="dark"] .modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Base generic select inside forms */
+[data-theme="dark"] select.form-select {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] select.form-select option {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+}
+
+/* Fix generic table responsive background if any was set by datatables */
+[data-theme="dark"] .table-responsive {
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .dataTables_wrapper .dataTables_length select,
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter input {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .dataTables_wrapper .dataTables_info {
+    color: var(--text-muted) !important;
+}
+
+/* Ultimate Dark Mode Fixes for List Pages */
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .card-footer {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table,
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd)>* {
+    color: var(--text-primary) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="dark"] .table-hover>tbody>tr:hover>* {
+    color: var(--text-primary) !important;
+    background-color: rgba(255, 255, 255, 0.075) !important;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] textarea,
+[data-theme="dark"] .input-group-text {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .page-link {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .page-item.active .page-link {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .badge-light {
+    background-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] div.dataTables_wrapper div.dataTables_info,
+[data-theme="dark"] div.dataTables_wrapper div.dataTables_length label,
+[data-theme="dark"] div.dataTables_wrapper div.dataTables_filter label {
+    color: var(--text-primary) !important;
+}
+
+/* ============================================
+   BADGES, ALERTS & TEXT VISIBILITY OVERRIDES
+   ============================================ */
+[data-theme="dark"] .badge-secondary,
+[data-theme="dark"] .bg-secondary,
+[data-theme="dark"] .badge-light,
+[data-theme="dark"] .bg-light {
+    background-color: #495057 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .alert-success {
+    background-color: rgba(25, 135, 84, 0.2) !important;
+    border-color: rgba(25, 135, 84, 0.3) !important;
+    color: #75b798 !important;
+    /* Lighter green for dark mode */
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+    border-color: rgba(220, 53, 69, 0.3) !important;
+    color: #ea868f !important;
+    /* Lighter red for dark mode */
+}
+
+[data-theme="dark"] .alert-warning {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    border-color: rgba(255, 193, 7, 0.3) !important;
+    color: #ffda6a !important;
+    /* Lighter yellow for dark mode */
+}
+
+[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 202, 240, 0.2) !important;
+    border-color: rgba(13, 202, 240, 0.3) !important;
+    color: #6edff6 !important;
+    /* Lighter cyan for dark mode */
+}
+
+[data-theme="dark"] .text-dark,
+[data-theme="dark"] .text-body,
+[data-theme="dark"] .text-gray-900,
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-gray-700 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-gray-600,
+[data-theme="dark"] .text-gray-500 {
+    color: #adb5bd !important;
+}
+
+/* Fix generic badges that might remain dark */
+[data-theme="dark"] .badge {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .badge-warning,
+[data-theme="dark"] .bg-warning {
+    background-color: #ffc107 !important;
+    color: #000000 !important;
+    /* Warning usually needs dark text to be readable on yellow */
+}
+
+[data-theme="dark"] .badge-danger,
+[data-theme="dark"] .bg-danger {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .badge-success,
+[data-theme="dark"] .bg-success {
+    background-color: #198754 !important;
+    color: #ffffff !important;
+}

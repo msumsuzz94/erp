@@ -1,0 +1,466 @@
+<?php
+/**
+ * Sales Report Page
+ */
+
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../../includes/db_functions.php';
+require_once __DIR__ . '/../../includes/auth.php';
+
+require_login();
+
+// Get filter parameters
+$from_date = get_param('from_date', date('Y-m-01'));
+$to_date = get_param('to_date', date('Y-m-d'));
+$customer_id = get_param('customer_id', '');
+$payment_status = get_param('payment_status', '');
+
+// Build query
+$sql = "SELECT s.*, c.name as customer_name
+        FROM sales s
+        LEFT JOIN customers c ON s.customer_id = c.id
+        WHERE s.status = 'completed'
+        AND s.sale_date BETWEEN ? AND ?";
+
+$params = [$from_date, $to_date];
+
+if (!empty($customer_id)) {
+    $sql .= " AND s.customer_id = ?";
+    $params[] = $customer_id;
+}
+
+if (!empty($payment_status)) {
+    $sql .= " AND s.payment_status = ?";
+    $params[] = $payment_status;
+}
+
+$sql .= " ORDER BY s.sale_date DESC";
+$sales = db_query($sql, $params);
+
+// Fetch returns for the same period/customer
+$return_sql = "SELECT sr.*, c.name as customer_name
+               FROM sales_returns sr
+               LEFT JOIN customers c ON sr.customer_id = c.id
+               WHERE sr.status = 'completed'
+               AND sr.return_date BETWEEN ? AND ?";
+$return_params = [$from_date, $to_date];
+if (!empty($customer_id)) {
+    $return_sql .= " AND sr.customer_id = ?";
+    $return_params[] = $customer_id;
+}
+$returns = db_query($return_sql, $return_params);
+
+// Calculate totals
+$total_sales = 0;
+$total_paid = 0;
+$total_due = 0;
+$total_tax = 0;
+$total_discount = 0;
+
+foreach ($sales as $sale) {
+    $total_sales += $sale['total_amount'];
+    $total_paid += $sale['paid_amount'];
+    $total_due += $sale['due_amount'];
+    $total_tax += $sale['tax_amount'];
+    $total_discount += $sale['discount'];
+}
+
+$total_returns = 0;
+foreach ($returns as $ret) {
+    $total_returns += $ret['total_amount'];
+}
+$net_sales = $total_sales - $total_returns;
+
+// Get all customers for filter dropdown
+$customers = db_query("SELECT id, name FROM customers ORDER BY name ASC");
+
+// Get business settings for header
+$invoice_settings = db_select_one('invoice_settings', ['id' => 1]);
+if (!$invoice_settings) {
+    $invoice_settings = [
+        'company_name' => defined('BUSINESS_NAME') ? BUSINESS_NAME : '',
+        'company_address' => defined('BUSINESS_ADDRESS') ? BUSINESS_ADDRESS : '',
+        'company_phone' => defined('BUSINESS_PHONE') ? BUSINESS_PHONE : '',
+        'company_email' => defined('BUSINESS_EMAIL') ? BUSINESS_EMAIL : '',
+        'company_website' => '',
+        'company_logo' => 'assets/images/logo.png',
+        'company_slogan' => ''
+    ];
+}
+
+$page_title = 'Sales Report';
+include __DIR__ . '/../../templates/header.php';
+?>
+
+<style>
+/* Print Area Styles (Hidden on Screen) */
+#print-area {
+    display: none;
+    padding: 20px;
+    background: #fff;
+    color: #000;
+}
+
+@media print {
+    @page { margin: 0.5cm; size: auto; }
+    html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; width: 100% !important; }
+    
+    /* Hide regular UI AND standard print header */
+    .no-print, .btn, .card, .navbar, .sidebar, #accordionSidebar, .topbar, footer, .footer, #footer, .summary-cards, #standard-print-wrapper, #standard-print-footer {
+        display: none !important;
+    }
+    
+    #print-area { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    
+    .print-container { 
+        width: 100% !important; 
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important; 
+        font-family: 'Segoe UI', Arial, sans-serif; 
+        font-size: 11px; 
+    }
+    
+    /* 3-Column Header */
+    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .header-table td { vertical-align: top; border: none !important; padding: 0; }
+    .logo-cell { width: 10%; text-align: left; }
+    .logo-cell img { max-width: 80px; height: auto; display: block; }
+    
+    .title-cell { width: 65%; text-align: center; padding: 0 10px; }
+    .company-name { font-size: 22px; font-weight: 900; color: #000; margin: 0; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; line-height: 1.2; padding-bottom: 2px; }
+    .company-slogan { font-size: 11px; color: #000; font-weight: bold; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .info-cell { width: 25%; text-align: left; line-height: 1.4; font-size: 9px; border: 1px solid #000; padding: 5px 8px; box-sizing: border-box; }
+    .info-cell p { margin: 0; margin-bottom: 2px; }
+    .info-cell p:last-child { margin-bottom: 0; }
+    
+    .report-main-title { text-align: center; font-size: 16px; color: #000; margin: 12px 0; font-weight: bold; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 6px 0; }
+
+    /* Simple Bordered Table */
+    .print-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .print-table th, .print-table td { border: 1px solid #333 !important; padding: 6px; text-align: left; }
+    .print-table th { background: #f2f2f2 !important; font-weight: bold; text-transform: uppercase; }
+    .text-end { text-align: right !important; }
+    
+    /* Fixed Footer at bottom of EVERY page */
+    .print-footer { 
+        position: fixed;
+        bottom: 0.3cm;
+        left: 0;
+        right: 0;
+        border-top: 1px solid #333; 
+        padding-top: 10px; 
+        display: block;
+        width: 100%;
+        font-size: 10px; 
+        background: #fff;
+        z-index: 9999;
+    }
+    .footer-left { float: left; width: 50%; font-weight: bold; text-align: left; padding-left: 10px; }
+    .footer-right { float: right; width: 50%; text-align: right; padding-right: 10px; }
+    .clearfix::after { content: ""; clear: both; display: table; }
+}
+</style>
+
+<!-- Hidden Print Area -->
+<div id="print-area">
+    <div class="print-container">
+        <!-- Header -->
+        <table class="header-table">
+            <tr>
+                <td class="logo-cell">
+                    <?php 
+                    $logo_url = !empty($invoice_settings['company_logo']) ? $invoice_settings['company_logo'] : 'assets/images/logo.png';
+                    if (!preg_match('~^(?:f|ht)tps?://~i', $logo_url)) {
+                        $logo_url = BASE_URL . '/' . ltrim($logo_url, '/');
+                    }
+                    ?>
+                    <img src="<?= $logo_url ?>" alt="Logo">
+                </td>
+                <td class="title-cell">
+                    <h1 class="company-name"><?= htmlspecialchars($invoice_settings['company_name'] ?? '') ?></h1><br>
+                    <div class="company-slogan"><?= htmlspecialchars($invoice_settings['company_slogan'] ?? '') ?></div>
+                </td>
+                <td class="info-cell">
+                    <p>Address: <?= htmlspecialchars($invoice_settings['company_address'] ?? '') ?></p>
+                    <p>Tel: <?= htmlspecialchars($invoice_settings['company_phone'] ?? '') ?></p>
+                    <p>Email: <?= htmlspecialchars($invoice_settings['company_email'] ?? '') ?></p>
+                    <p>Website: <?= htmlspecialchars($invoice_settings['company_website'] ?? '') ?></p>
+                </td>
+            </tr>
+        </table>
+
+        <div class="report-main-title">Sales Report (<?= format_date($from_date) ?> to <?= format_date($to_date) ?>)</div>
+
+        <!-- Ledger Table -->
+        <table class="print-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Invoice #</th>
+                    <th>Customer</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Tax</th>
+                    <th class="text-end">Discount</th>
+                    <th class="text-end">Paid</th>
+                    <th class="text-end">Due</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($sales)): ?>
+                    <tr><td colspan="8" class="text-center">No sales found</td></tr>
+                <?php else: ?>
+                    <?php foreach ($sales as $s): ?>
+                        <tr>
+                            <td><?= date('d-M-Y', strtotime($s['sale_date'])) ?></td>
+                            <td><?= htmlspecialchars($s['invoice_number']) ?></td>
+                            <td><?= htmlspecialchars($s['customer_name'] ?? 'Walk-in') ?></td>
+                            <td class="text-end"><?= format_currency($s['total_amount']) ?></td>
+                            <td class="text-end"><?= format_currency($s['tax_amount']) ?></td>
+                            <td class="text-end"><?= format_currency($s['discount']) ?></td>
+                            <td class="text-end"><?= format_currency($s['paid_amount']) ?></td>
+                            <td class="text-end"><?= format_currency($s['due_amount']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+            <tfoot>
+                <tr style="background:#f2f2f2;">
+                    <th colspan="3" class="text-end">GROSS TOTAL</th>
+                    <th class="text-end"><?= format_currency($total_sales) ?></th>
+                    <th class="text-end"><?= format_currency($total_tax) ?></th>
+                    <th class="text-end"><?= format_currency($total_discount) ?></th>
+                    <th class="text-end"><?= format_currency($total_paid) ?></th>
+                    <th class="text-end"><?= format_currency($total_due) ?></th>
+                </tr>
+                <tr style="background:#fff3f3; color: #a94442;">
+                    <th colspan="3" class="text-end">TOTAL RETURNS (-)</th>
+                    <th class="text-end"><?= format_currency($total_returns) ?></th>
+                    <th colspan="4"></th>
+                </tr>
+                <tr style="background:#dff0d8; color: #3c763d; font-size: 1.2em;">
+                    <th colspan="3" class="text-end">NET SALES</th>
+                    <th class="text-end"><?= format_currency($net_sales) ?></th>
+                    <th colspan="4"></th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Print Footer -->
+        <div class="print-footer clearfix">
+            <div class="footer-left">ERP Developed By : Shimul</div>
+            <div class="footer-right">DATE: <?= date('d-M-Y') ?>, Print Time: <?= date('h:i A') ?></div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Filter Report</h6>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>From Date</label>
+                        <input type="date" name="from_date" class="form-control" value="<?= htmlspecialchars($from_date) ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>To Date</label>
+                        <input type="date" name="to_date" class="form-control" value="<?= htmlspecialchars($to_date) ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Customer</label>
+                        <select name="customer_id" class="form-control">
+                            <option value="">All Customers</option>
+                            <?php foreach ($customers as $customer): ?>
+                                <option value="<?= $customer['id'] ?>" <?= $customer_id == $customer['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($customer['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Payment Status</label>
+                        <select name="payment_status" class="form-control">
+                            <option value="">All</option>
+                            <option value="paid" <?= $payment_status === 'paid' ? 'selected' : '' ?>>Paid</option>
+                            <option value="partial" <?= $payment_status === 'partial' ? 'selected' : '' ?>>Partial</option>
+                            <option value="unpaid" <?= $payment_status === 'unpaid' ? 'selected' : '' ?>>Unpaid</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Generate Report</button>
+            <button type="button" onclick="window.print()" class="btn btn-secondary"><i class="fas fa-print"></i> Print</button>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row summary-cards">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Net Sales (Gross - Returns)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= format_currency($net_sales) ?></div>
+                        <div class="text-xs mt-1">Gross: <?= format_currency($total_sales) ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Paid</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= format_currency($total_paid) ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total Returns</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= format_currency($total_returns) ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-undo fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow h-100 py-2" style="border-left: 0.25rem solid #e74a3b;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #e74a3b;">Total Due</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= format_currency($total_due) ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Invoices</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= count($sales) ?></div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Table -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Sales Details (<?= format_date($from_date) ?> to <?= format_date($to_date) ?>)</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="salesTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Invoice #</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Tax</th>
+                        <th>Discount</th>
+                        <th>Paid</th>
+                        <th>Due</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($sales)): ?>
+                        <tr>
+                            <td colspan="9" class="text-center">No sales found for selected period</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($sales as $sale): ?>
+                            <tr>
+                                <td><?= format_date($sale['sale_date']) ?></td>
+                                <td><a href="../sales/sale-view.php?id=<?= $sale['id'] ?>"><?= htmlspecialchars($sale['invoice_number']) ?></a></td>
+                                <td><?= htmlspecialchars($sale['customer_name'] ?? 'Walk-in') ?></td>
+                                <td><?= format_currency($sale['total_amount']) ?></td>
+                                <td><?= format_currency($sale['tax_amount']) ?></td>
+                                <td><?= format_currency($sale['discount']) ?></td>
+                                <td><?= format_currency($sale['paid_amount']) ?></td>
+                                <td><?= format_currency($sale['due_amount']) ?></td>
+                                <td>
+                                    <span class="badge bg-<?= ['paid' => 'success', 'partial' => 'warning', 'unpaid' => 'danger'][$sale['payment_status']] ?>">
+                                        <?= ucfirst($sale['payment_status']) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+                <tfoot>
+                    <tr class="table-primary">
+                        <th colspan="3">TOTAL</th>
+                        <th><?= format_currency($total_sales) ?></th>
+                        <th><?= format_currency($total_tax) ?></th>
+                        <th><?= format_currency($total_discount) ?></th>
+                        <th><?= format_currency($total_paid) ?></th>
+                        <th><?= format_currency($total_due) ?></th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include __DIR__ . '/../../templates/footer.php'; ?>
+
+<script>
+$(document).ready(function() {
+    $('#salesTable').DataTable({
+        "pageLength": 50,
+        "order": [[0, "desc"]]
+    });
+});
+</script>

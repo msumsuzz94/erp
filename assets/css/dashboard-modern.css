@@ -1,0 +1,512 @@
+/* ============================================
+   Modern Dashboard Styles - Redesigned
+   ============================================ */
+
+:root {
+    --card-bg: var(--glass-bg, #ffffff);
+    --card-border: var(--glass-border, #e3e6f0);
+    --bg-light: transparent;
+    /* Let body bg show through */
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    padding: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Stats Row - Flex Grid */
+.stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-box {
+    flex: 1;
+    min-width: 220px;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-box:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 45px 0 rgba(31, 38, 135, 0.15);
+}
+
+/* Stat Box Icons (Background Silhouette) */
+.stat-icon {
+    position: absolute;
+    right: -15px;
+    bottom: -20px;
+    font-size: 6rem;
+    opacity: 0.06;
+    z-index: 1;
+    color: var(--primary-color);
+    transform: rotate(-15deg);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stat-box:hover .stat-icon {
+    transform: rotate(0deg) scale(1.15);
+    opacity: 0.12;
+}
+
+.stat-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Add a subtle top border gradient accent */
+.stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--grad-primary);
+}
+
+/* Specific Stat Box Accents */
+.stat-box.petty-cash::before {
+    background: var(--grad-primary);
+}
+
+.stat-box.cash-in-hand::before {
+    background: var(--grad-success);
+}
+
+.stat-box.bank-balance::before {
+    background: var(--grad-info);
+}
+
+/* Auto-assign colors to generic boxes based on nth-child for variety */
+.row-1 .stat-box:nth-child(1)::before {
+    background: var(--grad-primary);
+}
+
+.row-1 .stat-box:nth-child(2)::before {
+    background: var(--grad-info);
+}
+
+.row-1 .stat-box:nth-child(3)::before {
+    background: var(--grad-warning);
+}
+
+.row-1 .stat-box:nth-child(4)::before {
+    background: var(--grad-danger);
+}
+
+.row-2 .stat-box:nth-child(1)::before {
+    background: var(--grad-warning);
+}
+
+.row-2 .stat-box:nth-child(2)::before {
+    background: var(--grad-danger);
+}
+
+.row-2 .stat-box:nth-child(3)::before {
+    background: var(--grad-primary);
+}
+
+.row-2 .stat-box:nth-child(4)::before {
+    background: var(--grad-danger);
+}
+
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    box-shadow: var(--glass-shadow);
+    transition: transform 0.3s ease;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Charts */
+.chart-container-sm {
+    height: 300px;
+    width: 100%;
+    position: relative;
+}
+
+/* Tables */
+.compact-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+}
+
+.compact-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--card-border);
+}
+
+.compact-table td {
+    padding: 0.75rem 0;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--card-border);
+    font-weight: 500;
+}
+
+.compact-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* List Cards */
+.list-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.card-header-flex {
+    padding: 1.25rem 1.5rem;
+    background: rgba(0, 0, 0, 0.02);
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-title {
+    font-weight: 800;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.list-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.list-table th {
+    background: rgba(0, 0, 0, 0.02);
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    border-top: none;
+    letter-spacing: 0.05em;
+}
+
+.list-table td {
+    padding: 1.25rem 1.5rem;
+    font-size: 0.9rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--card-border);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.list-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Badges */
+.badge-status {
+    padding: 0.35rem 0.75rem;
+    border-radius: 50rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    letter-spacing: 0.05em;
+}
+
+.badge-status.paid {
+    background: rgba(28, 200, 138, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(28, 200, 138, 0.2);
+}
+
+.badge-status.partial {
+    background: rgba(246, 194, 62, 0.1);
+    color: var(--warning-color);
+    border: 1px solid rgba(246, 194, 62, 0.2);
+}
+
+.badge-status.unpaid {
+    background: rgba(231, 74, 59, 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgba(231, 74, 59, 0.2);
+}
+
+/* Utilities */
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+}
+
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-info {
+    color: var(--info-color) !important;
+}
+
+.font-bold {
+    font-weight: 700 !important;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .stat-box {
+        min-width: 45%;
+    }
+}
+
+@media (max-width: 576px) {
+    .stat-box {
+        min-width: 100%;
+    }
+
+    .dashboard-container {
+        padding: 1rem;
+    }
+}
+
+.dashboard-container {
+    padding: 1.5rem;
+    background: var(--bg-light);
+    min-height: calc(100vh - 100px);
+}
+
+/* Stats Row - Flex Grid */
+.stats-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.stat-box {
+    flex: 1 !important;
+    min-width: 200px !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 0.5rem !important;
+    padding: 1.25rem !important;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1) !important;
+    transition: transform 0.2s ease !important;
+    display: block !important;
+}
+
+.stat-box:hover {
+    transform: translateY(-3px) !important;
+}
+
+.stat-box.petty-cash {
+    border-left: 4px solid var(--primary-color) !important;
+}
+
+.stat-box.cash-in-hand {
+    border-left: 4px solid var(--success-color) !important;
+}
+
+.stat-box.bank-balance {
+    border-left: 4px solid var(--info-color) !important;
+}
+
+.stat-label {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase !important;
+    margin-bottom: 0.5rem !important;
+    letter-spacing: 0.05rem !important;
+}
+
+.stat-value {
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 0.5rem !important;
+    padding: 1.25rem !important;
+    height: 100% !important;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1) !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.card-title {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    color: var(--primary-color) !important;
+    margin-bottom: 1rem !important;
+    text-transform: uppercase !important;
+    border-bottom: 1px solid var(--card-border) !important;
+    padding-bottom: 0.75rem !important;
+    display: block !important;
+}
+
+/* Charts */
+.chart-container-sm {
+    height: 250px !important;
+    position: relative !important;
+}
+
+/* Tables */
+.compact-table {
+    width: 100% !important;
+}
+
+.compact-table td {
+    padding: 0.5rem 0 !important;
+    font-size: 0.85rem !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--card-border) !important;
+}
+
+.compact-table tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* List Cards */
+.list-card {
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.card-header-flex {
+    padding: 1rem 1.25rem !important;
+    background: var(--body-bg) !important;
+    border-bottom: 1px solid var(--card-border) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.header-title {
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+}
+
+.list-table {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+.list-table th {
+    background: var(--body-bg) !important;
+    padding: 0.75rem 1.25rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase !important;
+    border-top: none !important;
+}
+
+.list-table td {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.85rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid var(--card-border) !important;
+}
+
+/* Badges */
+.badge-status {
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    display: inline-block !important;
+}
+
+
+
+/* Utilities */
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+}
+
+.font-bold {
+    font-weight: 700 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stat-box {
+        min-width: 45% !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .stat-box {
+        min-width: 100% !important;
+    }
+}
