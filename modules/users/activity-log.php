@@ -129,11 +129,7 @@ include __DIR__ . '/../../templates/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($logs)): ?>
-                        <tr>
-                            <td colspan="5" class="text-center">No activity logs found</td>
-                        </tr>
-                    <?php else: ?>
+                    <?php if (!empty($logs)): ?>
                         <?php foreach ($logs as $log): ?>
                             <tr>
                                 <td><?= format_datetime($log['created_at']) ?></td>

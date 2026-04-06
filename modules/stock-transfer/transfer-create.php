@@ -12,6 +12,9 @@ require_once __DIR__ . '/../../includes/auth.php';
 // Require login
 require_login();
 
+// Ensure product_serials with empty stock_type are treated as 'current'
+db_query("UPDATE product_serials SET stock_type = 'current' WHERE (stock_type IS NULL OR stock_type = '') AND status = 'in_stock'");
+
 // Get products with stock
 $sql_products = "SELECT p.*, 
                 COALESCE(p.stock_quantity, 0) as total_stock
@@ -66,10 +69,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Determine transfer type from combination
             $transfer_type = $from_stock_type . '_to_' . $to_stock_type;
-            $valid_types = ['current_to_rma', 'rma_to_current', 'rma_to_damaged', 'damaged_to_rma'];
+            $valid_types = [
+                'current_to_damaged',  // Step 1: Defect found in shelf/warehouse
+                'damaged_to_rma',      // Step 2: Send to service center/supplier
+                'rma_to_current',      // Step 3: Repaired/replaced, back to stock
+                'rma_to_loss'          // Step 4: Write-off / scrap / refund received
+            ];
             
             if (!in_array($transfer_type, $valid_types)) {
-                throw new Exception('Invalid stock type combination');
+                throw new Exception('Invalid stock type combination. Follow the workflow: Current→Damaged→RMA→Current or RMA→Loss');
             }
         } else {
             throw new Exception('Invalid transfer mode');
@@ -154,7 +162,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!$serial || $serial['product_id'] != $product_id) {
                         throw new Exception("Invalid serial number ID: $serial_id");
                     }
-                    if ($serial['stock_type'] != $from_stock_type) {
+                    // Treat empty/null stock_type as 'current'
+                    $serial_stock_type = !empty($serial['stock_type']) ? $serial['stock_type'] : 'current';
+                    if ($serial_stock_type != $from_stock_type) {
                         throw new Exception("Serial {$serial['serial_number']} is not in $from_stock_type stock");
                     }
                 }
@@ -223,8 +233,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             "UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?",
                             [$quantity, $product_id]
                         );
+                    } else if ($to_stock_type === 'loss') {
+                        // Loss/Scrap: stock is permanently gone, don't add anywhere
+                        // Just log it (deduction already happened above)
                     } else {
-                        // Insert or update in stock_type_inventory
+                        // Insert or update in stock_type_inventory (damaged, rma)
                         db_query(
                             "INSERT INTO stock_type_inventory (product_id, stock_type, quantity) 
                              VALUES (?, ?, ?)
@@ -237,12 +250,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update serial numbers stock_type if provided
                 if (!empty($serial_numbers)) {
                     $serial_ids_str = implode(',', array_map('intval', $serial_numbers));
-                    db_query(
-                        "UPDATE product_serials 
-                         SET stock_type = ?, status = ? 
-                         WHERE id IN ($serial_ids_str)",
-                        [$to_stock_type, 'in_stock']
-                    );
+                    if ($to_stock_type === 'loss') {
+                        // Mark serials as written off / scrapped
+                        db_query(
+                            "UPDATE product_serials 
+                             SET stock_type = 'loss', status = 'scrapped' 
+                             WHERE id IN ($serial_ids_str)"
+                        );
+                    } else {
+                        db_query(
+                            "UPDATE product_serials 
+                             SET stock_type = ?, status = ? 
+                             WHERE id IN ($serial_ids_str)",
+                            [$to_stock_type, 'in_stock']
+                        );
+                    }
                 }
             }
         }
@@ -266,7 +288,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($conn) && $conn instanceof PDO && $conn->inTransaction()) {
             dbRollback();
         }
+        // PRG: redirect on error too — prevents duplicate submission on browser reload
         set_message('Error: ' . $e->getMessage(), 'danger');
+        redirect(BASE_URL . '/modules/stock-transfer/transfer-create.php');
     }
 }
 
@@ -343,13 +367,40 @@ include __DIR__ . '/../../templates/header.php';
                     
                     <!-- Stock Type Mode Fields -->
                     <div id="stockTypeFields" style="display: none;">
+                        <!-- Workflow Guide -->
+                        <div class="alert alert-info py-2 px-3 mb-3" style="font-size: 0.85rem;">
+                            <strong><i class="fas fa-route"></i> স্টক লাইফসাইকেল ওয়ার্কফ্লো:</strong>
+                            <table class="table table-sm table-borderless mb-0 mt-1" style="font-size: 0.85rem;">
+                                <tr>
+                                    <td><span class="badge bg-primary">ধাপ ১</span></td>
+                                    <td>Current → Damaged</td>
+                                    <td class="text-muted">সেলফ বা গোডাউনে থাকা অবস্থায় ত্রুটি ধরা পড়লে</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-warning text-dark">ধাপ ২</span></td>
+                                    <td>Damaged → RMA</td>
+                                    <td class="text-muted">সার্ভিস সেন্টার বা সাপ্লায়ারের কাছে পাঠানো হলে</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-success">ধাপ ৩</span></td>
+                                    <td>RMA → Current</td>
+                                    <td class="text-muted">পণ্যটি ঠিক হয়ে বা নতুন পিস বদলে আসলে</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-danger">ধাপ ৪</span></td>
+                                    <td>RMA → Loss/Scrap</td>
+                                    <td class="text-muted">পণ্যটি আর ফেরত না আসলে বা রিফান্ড পাওয়া গেলে</td>
+                                </tr>
+                            </table>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Transfer From <span class="text-danger">*</span></label>
                             <select name="from_stock_type" id="fromStockType" class="form-select">
                                 <option value="">Select Source Type</option>
-                                <option value="current">Current Stock</option>
-                                <option value="rma">RMA</option>
-                                <option value="damaged">Damaged</option>
+                                <option value="current">Current Stock (Step 1)</option>
+                                <option value="damaged">Damaged (Step 2)</option>
+                                <option value="rma">RMA (Step 3/4)</option>
                             </select>
                             <small class="text-muted">Where the stock is coming from</small>
                         </div>
@@ -358,11 +409,8 @@ include __DIR__ . '/../../templates/header.php';
                             <label class="form-label">Transfer To <span class="text-danger">*</span></label>
                             <select name="to_stock_type" id="toStockType" class="form-select">
                                 <option value="">Select Destination Type</option>
-                                <option value="rma">RMA</option>
-                                <option value="current">Current Stock</option>
-                                <option value="damaged">Damaged</option>
                             </select>
-                            <small class="text-muted">Where the stock is going to</small>
+                            <small class="text-muted" id="toStockTypeHelp">Select source type first</small>
                         </div>
                     </div>
                 </div>
@@ -580,25 +628,65 @@ function validateWarehouses() {
     }
 }
 
+// Dynamically update "To" options based on "From" selection
+$('#fromStockType').on('change', function() {
+    const from = $(this).val();
+    const toSelect = $('#toStockType');
+    toSelect.empty().append('<option value="">Select Destination Type</option>');
+    
+    const workflowMap = {
+        'current': [
+            { value: 'damaged', label: 'Damaged — Step 1: Defect found', step: 1 }
+        ],
+        'damaged': [
+            { value: 'rma', label: 'RMA — Step 2: Send to service center', step: 2 }
+        ],
+        'rma': [
+            { value: 'current', label: 'Current Stock — Step 3: Repaired / Replaced', step: 3 },
+            { value: 'loss', label: 'Loss / Scrap — Step 4: Write-off', step: 4 }
+        ]
+    };
+
+    const options = workflowMap[from] || [];
+    options.forEach(opt => {
+        toSelect.append(`<option value="${opt.value}">${opt.label}</option>`);
+    });
+
+    // Update help text
+    const helpTexts = {
+        'current': 'Defect found → move to Damaged',
+        'damaged': 'Sending to service center → move to RMA',
+        'rma': 'Choose: Repaired → Current Stock, or Write-off → Loss/Scrap'
+    };
+    $('#toStockTypeHelp').text(helpTexts[from] || 'Select source type first');
+
+    // Auto-select if only one option
+    if (options.length === 1) {
+        toSelect.val(options[0].value);
+    }
+
+    // Clear and reload products
+    transferItems = [];
+    renderTransferItems();
+    updateAvailableStock();
+});
+
 function validateStockTypes() {
     const from = $('#fromStockType').val();
     const to = $('#toStockType').val();
     
     if (!from || !to) return;
     
-    if (from === to) {
-        alert('Source and destination cannot be the same');
-        $('#toStockType').val('');
-        return;
-    }
-    
     const validCombinations = [
-        'current-rma', 'rma-current', 'rma-damaged', 'damaged-rma'
+        'current-damaged',  // Step 1
+        'damaged-rma',      // Step 2
+        'rma-current',      // Step 3
+        'rma-loss'          // Step 4
     ];
     
     const combination = from + '-' + to;
     if (!validCombinations.includes(combination)) {
-        alert('Invalid stock type combination. Valid: Current↔RMA, RMA↔Damaged');
+        alert('Invalid combination! Follow workflow: Current→Damaged→RMA→Current or RMA→Loss');
         $('#toStockType').val('');
     }
 }
@@ -769,8 +857,13 @@ function addProduct() {
     }
     
     // Validation
-    if (!fromStockType) {
+    const transferMode = $('input[name="transfer_mode"]:checked').val();
+    if (transferMode === 'stock_type' && !fromStockType) {
         alert('Please select source stock type first');
+        return;
+    }
+    if (transferMode === 'warehouse' && !$('#fromWarehouse').val()) {
+        alert('Please select source warehouse first');
         return;
     }
     

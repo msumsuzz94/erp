@@ -55,9 +55,17 @@ if (is_post()) {
             if ($product) {
                 // Check if enough stock is available
                 if ($product['stock_quantity'] >= $quantity) {
-                    // Reduce stock quantity
+                    // Reduce stock quantity from current stock
                     $new_quantity = $product['stock_quantity'] - $quantity;
                     db_update('products', ['stock_quantity' => $new_quantity], ['id' => $product_id]);
+
+                    // Add to stock_type_inventory as 'damaged' so Step 2 (Damaged→RMA) can find it
+                    db_query(
+                        "INSERT INTO stock_type_inventory (product_id, stock_type, quantity) 
+                         VALUES (?, 'damaged', ?)
+                         ON DUPLICATE KEY UPDATE quantity = quantity + ?",
+                        [$product_id, $quantity, $quantity]
+                    );
 
                     // Insert damaged stock entry
                     // Ensure reason is not empty (required field)
@@ -100,9 +108,9 @@ if (is_post()) {
                                     ];
                                     db_insert('damaged_stock_serials', $serial_link_data);
                                     
-                                    // Update serial status to 'defective'
+                                    // Update serial status to 'defective' and stock_type to 'damaged'
                                     db_update('product_serials', 
-                                        ['status' => 'defective'], 
+                                        ['status' => 'defective', 'stock_type' => 'damaged'], 
                                         ['id' => $serial_id]
                                     );
                                 }
@@ -184,6 +192,21 @@ foreach ($stats_raw as $stat) {
 $page_title = 'Damaged/Dead Stock Management';
 include __DIR__ . '/../../templates/header.php';
 ?>
+
+<!-- Stock Lifecycle Workflow Guide -->
+<div class="alert alert-info py-2 px-3 mb-4" style="font-size: 0.9rem;">
+    <strong><i class="fas fa-route"></i> স্টক লাইফসাইকেল ওয়ার্কফ্লো:</strong>
+    <div class="mt-1 d-flex flex-wrap align-items-center gap-2">
+        <span class="badge bg-primary p-2">ধাপ ১: Current → Damaged</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <a href="../stock-transfer/transfer-create.php" class="badge bg-warning text-dark p-2 text-decoration-none">ধাপ ২: Damaged → RMA</a>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <a href="../stock-transfer/transfer-create.php" class="badge bg-success p-2 text-decoration-none">ধাপ ৩: RMA → Current</a>
+        <span class="mx-1">অথবা</span>
+        <a href="../stock-transfer/transfer-create.php" class="badge bg-danger p-2 text-decoration-none">ধাপ ৪: RMA → Loss/Scrap</a>
+    </div>
+    <small class="text-muted d-block mt-1">এই পেজে ধাপ ১ সম্পন্ন হয়। পরবর্তী ধাপের জন্য <a href="../stock-transfer/transfer-create.php">Stock Transfer</a> পেজে যান।</small>
+</div>
 
 <div class="row mb-4">
     <!-- Statistics Cards -->
@@ -369,12 +392,11 @@ include __DIR__ . '/../../templates/header.php';
                                     </td>
                                     <td>
                                         <?php if (!empty($entry['serial_numbers'])): ?>
-                                            <span class="badge badge-info" title="<?= htmlspecialchars($entry['serial_numbers']) ?>">
-                                                <?= count(explode(', ', $entry['serial_numbers'])) ?> serials
-                                            </span>
-                                            <small class="d-block text-muted" style="font-size: 0.75rem;">
-                                                <?= htmlspecialchars(truncate($entry['serial_numbers'], 50)) ?>
-                                            </small>
+                                            <?php 
+                                            $sn_list = explode(', ', $entry['serial_numbers']);
+                                            foreach ($sn_list as $sn): ?>
+                                                <span class="badge bg-info text-dark mb-1 me-1" style="font-size: 0.8rem;"><?= htmlspecialchars(trim($sn)) ?></span>
+                                            <?php endforeach; ?>
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>

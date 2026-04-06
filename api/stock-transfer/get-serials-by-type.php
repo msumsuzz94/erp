@@ -34,20 +34,27 @@ try {
     // When stock_type is 'current', serials typically have serial_status='in_stock'
     // When stock_type is 'rma' or 'damaged', serials have matching serial_status
     
+    // Build query based on stock type
+    // damaged serials have status='defective', RMA serials have status='in_stock'
     $query = "SELECT id, serial_number, status, stock_type, serial_status
               FROM product_serials 
-              WHERE product_id = ? 
-              AND status = 'in_stock'";
+              WHERE product_id = ?";
     
     $params = [$product_id];
     
-    // Add stock_type filter
+    // Add stock_type and status filter
     if ($stock_type === 'current') {
         // For current stock, check either stock_type is null/empty or explicitly 'current'
+        $query .= " AND status = 'in_stock'";
         $query .= " AND (stock_type IS NULL OR stock_type = '' OR stock_type = 'current')";
+    } else if ($stock_type === 'damaged') {
+        // Damaged serials: status='defective', stock_type='damaged'
+        $query .= " AND stock_type = 'damaged'";
+        $query .= " AND status IN ('in_stock', 'defective')";
     } else {
-        // For RMA or damaged stock, match exact stock_type
+        // RMA or other stock types
         $query .= " AND stock_type = ?";
+        $query .= " AND status = 'in_stock'";
         $params[] = $stock_type;
     }
     

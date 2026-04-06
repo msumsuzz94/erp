@@ -174,14 +174,31 @@ include __DIR__ . '/../../templates/header.php';
 
 @media print {
     @page { margin: 0.25cm; size: auto; }
-    html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; width: 100% !important; }
+    html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; color: #000 !important; width: 100% !important; }
     
     /* Hide regular UI AND standard print header/footer */
     .no-print, .btn, .card, .card-header, .navbar, .sidebar, #accordionSidebar, .topbar, footer, .footer, #footer, .summary-cards, #standard-print-wrapper, #standard-print-footer {
         display: none !important;
     }
     
-    #print-area { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    /* Hide entire wrapper if it exists but allow print area to show */
+    #wrapper { display: none !important; }
+    
+    #print-area { 
+        display: block !important; 
+        width: 100% !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        background-color: #fff !important; 
+    }
+    
+    /* Force all text in print area to black */
+    #print-area, #print-area * {
+        color: #000 !important;
+    }
     
     /* Document Container */
     .print-container { 
@@ -201,8 +218,8 @@ include __DIR__ . '/../../templates/header.php';
     .logo-cell img { max-width: 80px; height: auto; display: block; }
     
     .title-cell { width: 65%; text-align: center; padding: 0 10px; }
-    .company-name { font-size: 22px; font-weight: 900; color: #000; margin: 0; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; line-height: 1.2; padding-bottom: 2px; }
-    .company-slogan { font-size: 11px; color: #000; font-weight: bold; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .company-name { font-size: 22px; font-weight: 900; color: #000 !important; margin: 0; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; line-height: 1.2; padding-bottom: 2px; }
+    .company-slogan { font-size: 11px; color: #000 !important; font-weight: bold; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
     
     .info-cell { width: 25%; text-align: left; line-height: 1.4; font-size: 9px; border: 1px solid #000; padding: 5px 8px; box-sizing: border-box; }
     .info-cell p { margin: 0; margin-bottom: 2px; }
@@ -212,16 +229,16 @@ include __DIR__ . '/../../templates/header.php';
     .info-bar { border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 5px 0; margin-bottom: 15px; width: 100%; }
     .info-bar-table { width: 100%; border-collapse: collapse; }
     .info-bar-table td { padding: 2px 0; border: none !important; }
-    .label { font-weight: bold; }
+    .label { font-weight: bold; color: #000 !important; }
     .date-box { border: 1px solid #000; padding: 2px 5px; font-weight: bold; }
 
     /* Centered Title */
-    .page-main-title { text-align: center; font-size: 16px; color: #000; margin-bottom: 10px; font-weight: bold; }
+    .page-main-title { text-align: center; font-size: 16px; color: #000 !important; margin-bottom: 10px; font-weight: bold; }
 
     /* Simple Bordered Table for Ledger */
     .ledger-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    .ledger-table th, .ledger-table td { border: 1px solid #333 !important; padding: 5px; text-align: left; }
-    .ledger-table th { background: #f2f2f2 !important; font-weight: bold; text-transform: uppercase; }
+    .ledger-table th, .ledger-table td { border: 1px solid #333 !important; padding: 5px; text-align: left; color: #000 !important; }
+    .ledger-table th { background-color: #f2f2f2 !important; font-weight: bold; text-transform: uppercase; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .text-end { text-align: right !important; }
     
     /* Fixed Footer at bottom of EVERY page */
@@ -235,7 +252,8 @@ include __DIR__ . '/../../templates/header.php';
         display: block; 
         width: 100%; 
         font-size: 10px; 
-        background: #fff;
+        background: #fff !important;
+        color: #000 !important;
         z-index: 9999;
     }
     .footer-left { float: left; width: 50%; font-weight: bold; text-align: left; padding-left: 10px; }

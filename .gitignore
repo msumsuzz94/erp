@@ -47,5 +47,9 @@ media_url.txt
 # SQL dumps (keep clean one if needed)
 business_pos.sql
 
-# Sensitive config (uncomment if config contains credentials)
-# config/config.php
+# Sensitive config
+config/config.php
+.env
+
+# Untracked tools
+check_db_stock.php

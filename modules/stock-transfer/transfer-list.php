@@ -98,11 +98,13 @@ include __DIR__ . '/../../templates/header.php';
                                     <?php
                                     $type_badges = [
                                         'normal' => '<span class="badge bg-secondary">Normal</span>',
+                                        'current_to_damaged' => '<span class="badge bg-primary">ধাপ ১: Current→Damaged</span>',
+                                        'damaged_to_rma' => '<span class="badge bg-warning text-dark">ধাপ ২: Damaged→RMA</span>',
+                                        'rma_to_current' => '<span class="badge bg-success">ধাপ ৩: RMA→Current</span>',
+                                        'rma_to_loss' => '<span class="badge bg-danger">ধাপ ৪: RMA→Loss/Scrap</span>',
+                                        // Legacy types
                                         'current_to_rma' => '<span class="badge bg-warning">Current→RMA</span>',
-                                        'rma_to_current' => '<span class="badge bg-info">RMA→Current</span>',
                                         'rma_to_damaged' => '<span class="badge bg-danger">RMA→Damaged</span>',
-                                        'damaged_to_rma' => '<span class="badge bg-warning">Damaged→RMA</span>',
-                                        // Legacy types just in case
                                         'damaged_to_good' => '<span class="badge bg-warning">Damaged→Good</span>',
                                         'return_to_good' => '<span class="badge bg-info">Return→Good</span>'
                                     ];

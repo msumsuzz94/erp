@@ -1,4 +1,4 @@
-﻿/* ============================================
+/* ============================================
    DARK MODE SELECT2 & TABLE OVERRIDES
    ============================================ */
 
@@ -108,6 +108,30 @@
     color: var(--text-primary) !important;
     border-color: var(--border-color) !important;
     background-color: var(--card-bg) !important;
+}
+
+/* Fix .table-light rows/cells turning pitch black in dark mode */
+[data-theme="dark"] .table-light,
+[data-theme="dark"] .table-light th,
+[data-theme="dark"] .table-light td,
+[data-theme="dark"] .table-light > th,
+[data-theme="dark"] .table-light > td,
+[data-theme="dark"] tr.table-light > * {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: var(--text-primary) !important;
+    --bs-table-bg: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+}
+
+/* Fix .table-active rows turning black in dark mode */
+[data-theme="dark"] .table-active,
+[data-theme="dark"] .table-active th,
+[data-theme="dark"] .table-active td,
+[data-theme="dark"] tr.table-active > * {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-primary) !important;
+    --bs-table-bg: transparent !important;
+    --bs-table-accent-bg: transparent !important;
 }
 
 [data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd)>* {

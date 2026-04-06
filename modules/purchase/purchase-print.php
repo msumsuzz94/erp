@@ -314,16 +314,12 @@ $payments = db_query($sql, [$purchase_id]);
                             <td>
                                 <div style="font-weight: bold;"><?= htmlspecialchars($item['product_name']) ?></div>
                                 
-                                <?php if (!empty($item['warranty_duration'])): ?>
-                                    <div class="item-description" style="color: #000; font-weight: bold;">
-                                        Warranty: <?= htmlspecialchars($item['warranty_duration'] . ' ' . $item['warranty_period']) ?>
-                                    </div>
+                                <?php if (!empty($product_serials[$item['product_id']])): ?>
+                                    <div class="item-description" style="margin-top: 0; color: #000; font-weight: bold;">Serials: <?= implode(', ', array_map('htmlspecialchars', $product_serials[$item['product_id']])) ?></div>
                                 <?php endif; ?>
 
-                                <?php if (!empty($product_serials[$item['product_id']])): ?>
-                                    <div class="item-description" style="margin-top: 3px;">
-                                        <strong>Serials:</strong> <?= implode(', ', array_map('htmlspecialchars', $product_serials[$item['product_id']])) ?>
-                                    </div>
+                                <?php if (!empty($item['warranty_duration'])): ?>
+                                    <div class="item-description" style="margin-top: 0; color: #000; font-weight: bold;">Warranty: <?= htmlspecialchars($item['warranty_duration'] . ' ' . $item['warranty_period']) ?></div>
                                 <?php endif; ?>
 
                                 <?php 

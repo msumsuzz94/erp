@@ -66,20 +66,56 @@ try {
                         db_query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?", [$qty, $product_id]);
                     }
                 } else {
-                    // Stock Type deduction
-                    $from_type = explode('_to_', $transfer['transfer_type'])[0];
+                    // Stock Type transfer
+                    $type_parts = explode('_to_', $transfer['transfer_type']);
+                    $from_type  = $type_parts[0] ?? null;
+                    $to_type    = $type_parts[1] ?? null;
+
+                    // --- Deduct from source ---
                     if ($from_type === 'current') {
                         db_query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?", [$qty, $product_id]);
-                    } else {
+                    } elseif ($from_type) {
+                        // FIX: no warehouse_id filter — warehouse_id is NULL for stock type transfers
                         db_query(
-                            "UPDATE stock_type_inventory SET quantity = quantity - ? 
-                             WHERE product_id = ? AND stock_type = ? AND warehouse_id = ?",
-                            [$qty, $product_id, $from_type, $transfer['from_warehouse_id']]
+                            "UPDATE stock_type_inventory SET quantity = quantity - ?
+                             WHERE product_id = ? AND stock_type = ?",
+                            [$qty, $product_id, $from_type]
                         );
-                        
-                        // Sync rma_quantity if applicable
                         if ($from_type === 'rma') {
-                            db_query("UPDATE products SET rma_quantity = rma_quantity - ? WHERE id = ?", [$qty, $product_id]);
+                            db_query("UPDATE products SET rma_quantity = GREATEST(0, rma_quantity - ?) WHERE id = ?", [$qty, $product_id]);
+                        }
+                    }
+
+                    // --- Add to destination at approve time (stock type = status change only, no physical movement) ---
+                    if ($to_type === 'current') {
+                        db_query("UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?", [$qty, $product_id]);
+                    } elseif ($to_type === 'loss') {
+                        // Loss/Scrap: permanently removed — nothing to add
+                    } elseif ($to_type) {
+                        db_query(
+                            "INSERT INTO stock_type_inventory (product_id, stock_type, quantity)
+                             VALUES (?, ?, ?)
+                             ON DUPLICATE KEY UPDATE quantity = quantity + ?",
+                            [$product_id, $to_type, $qty, $qty]
+                        );
+                        if ($to_type === 'rma') {
+                            db_query("UPDATE products SET rma_quantity = rma_quantity + ? WHERE id = ?", [$qty, $product_id]);
+                        }
+                    }
+
+                    // --- Update serial numbers NOW at approve time ---
+                    if (!empty($item['serial_numbers'])) {
+                        $serial_ids = json_decode($item['serial_numbers'], true);
+                        if (!empty($serial_ids)) {
+                            $ids_str = implode(',', array_map('intval', $serial_ids));
+                            if ($to_type === 'loss') {
+                                db_query("UPDATE product_serials SET stock_type = 'loss', status = 'scrapped' WHERE id IN ($ids_str)");
+                            } else {
+                                db_query(
+                                    "UPDATE product_serials SET stock_type = ?, status = 'in_stock' WHERE id IN ($ids_str)",
+                                    [$to_type]
+                                );
+                            }
                         }
                     }
                 }
@@ -106,51 +142,33 @@ try {
             
             foreach ($items as $item) {
                 $product_id = $item['product_id'];
-                $qty = $item['quantity'];
-                $to_type = explode('_to_', $transfer['transfer_type'])[1] ?? 'current';
+                $qty        = $item['quantity'];
+                $to_type    = explode('_to_', $transfer['transfer_type'])[1] ?? 'current';
                 
-                // 1. Add to Destination Inventory
+                // For WAREHOUSE transfers: add to destination here (physical receipt)
                 if ($transfer['to_warehouse_id']) {
-                    // Warehouse addition
                     db_query(
-                        "INSERT INTO product_warehouse_stock (product_id, warehouse_id, quantity) 
+                        "INSERT INTO product_warehouse_stock (product_id, warehouse_id, quantity)
                          VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?",
                         [$product_id, $transfer['to_warehouse_id'], $qty, $qty]
                     );
-                    
                     $to_wh = db_select_one('warehouses', ['id' => $transfer['to_warehouse_id']]);
                     if ($to_wh && $to_wh['is_saleable']) {
                         db_query("UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?", [$qty, $product_id]);
                     }
-                } else {
-                    // Stock Type addition
-                    if ($to_type === 'current') {
-                        db_query("UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?", [$qty, $product_id]);
-                    } else {
-                        db_query(
-                            "INSERT INTO stock_type_inventory (product_id, warehouse_id, stock_type, quantity) 
-                             VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?",
-                            [$product_id, $transfer['from_warehouse_id'], $to_type, $qty, $qty]
-                        );
-                        
-                        // Sync rma_quantity if applicable
-                        if ($to_type === 'rma') {
-                            db_query("UPDATE products SET rma_quantity = rma_quantity + ? WHERE id = ?", [$qty, $product_id]);
+                    // Update serials for warehouse transfers
+                    if (!empty($item['serial_numbers'])) {
+                        $serial_ids = json_decode($item['serial_numbers'], true);
+                        if (!empty($serial_ids)) {
+                            $ids_str = implode(',', array_map('intval', $serial_ids));
+                            db_query(
+                                "UPDATE product_serials SET stock_type = ?, status = 'in_stock' WHERE id IN ($ids_str)",
+                                [$to_type]
+                            );
                         }
                     }
                 }
-                
-                // 2. Update Serial Numbers if any
-                if ($item['serial_numbers']) {
-                    $serial_ids = json_decode($item['serial_numbers'], true);
-                    if (!empty($serial_ids)) {
-                        $ids_str = implode(',', array_map('intval', $serial_ids));
-                        db_query(
-                            "UPDATE product_serials SET stock_type = ?, status = 'in_stock' WHERE id IN ($ids_str)",
-                            [$to_type]
-                        );
-                    }
-                }
+                // For STOCK TYPE transfers: inventory + serials already updated at approve time — skip here
             }
             
             // Update status
