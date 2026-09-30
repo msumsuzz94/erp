@@ -131,30 +131,30 @@ if (!empty($to_date)) {
     $sql .= " AND date <= ?";
     $params[] = $to_date;
 }
-if (!empty($transaction_type)) {
-    $sql .= " AND transaction_type = ?";
-    $params[] = $transaction_type;
-}
+// Do not filter by transaction_type in SQL to ensure accurate running balance
 
 $sql .= " ORDER BY date ASC, created_at ASC";
-$ledger_entries = db_query($sql, $params);
+$all_ledger_entries = db_query($sql, $params);
 
 $running_balance = $opening_balance;
-$processed_entries = [];
+$display_entries = [];
 $total_debit = 0;
 $total_credit = 0;
 
-foreach ($ledger_entries as $entry) {
+foreach ($all_ledger_entries as $entry) {
     $running_balance += ($entry['debit'] - $entry['credit']);
     $entry['running_balance'] = $running_balance;
-    $processed_entries[] = $entry;
-    $total_debit += $entry['debit'];
-    $total_credit += $entry['credit'];
+    
+    // Filter by transaction_type in PHP
+    if (empty($transaction_type) || $entry['transaction_type'] === $transaction_type) {
+        $display_entries[] = $entry;
+        $total_debit += $entry['debit'];
+        $total_credit += $entry['credit'];
+    }
 }
 
-$display_entries = array_reverse($processed_entries);
+// Display in ASC order (Oldest first) to match Opening Balance at the top
 $final_balance = $running_balance;
-
 // Get distinct transaction types for filter
 $types_sql = "SELECT DISTINCT transaction_type FROM supplier_ledger WHERE supplier_id = ?";
 $available_types = db_query($types_sql, [$supplier_id]);
@@ -329,7 +329,7 @@ include __DIR__ . '/../../templates/header.php';
                     <td class="text-end"><?= $opening_balance < 0 ? format_currency(abs($opening_balance)) : '-' ?></td>
                     <td class="text-end"><strong><?= format_currency(abs($opening_balance)) ?></strong></td>
                 </tr>
-                <?php foreach (array_reverse($display_entries) as $entry): ?>
+                <?php foreach ($display_entries as $entry): ?>
                     <tr>
                         <td><?= date('Y-m-d', strtotime($entry['date'])) ?></td>
                         <td><?= ucfirst(str_replace('_', ' ', $entry['transaction_type'])) ?></td>
@@ -448,7 +448,9 @@ include __DIR__ . '/../../templates/header.php';
                         <th>Balance</th>
                     </tr>
                     <tr class="table-light no-print">
-                        <th colspan="3" class="text-end">Opening Balance</th>
+                        <th></th>
+                        <th></th>
+                        <th class="text-end">Opening Balance</th>
                         <th class="text-end font-weight-normal"><?= $opening_balance > 0 ? format_currency($opening_balance) : '-' ?></th>
                         <th class="text-end font-weight-normal"><?= $opening_balance < 0 ? format_currency(abs($opening_balance)) : '-' ?></th>
                         <th class="text-end <?= $opening_balance > 0 ? 'text-danger' : 'text-success' ?>">
@@ -457,34 +459,32 @@ include __DIR__ . '/../../templates/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($display_entries)): ?>
-                        <tr><td colspan="6" class="text-center">No transactions found</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($display_entries as $entry): ?>
-                            <tr>
-                                <td><?= format_date($entry['date']) ?></td>
-                                <td>
-                                    <?php
-                                    $type_colors = ['purchase' => 'primary', 'payment' => 'success', 'return' => 'danger'];
-                                    $color = $type_colors[$entry['transaction_type']] ?? 'secondary';
-                                    ?>
-                                    <span class="badge badge-<?= $color ?>">
-                                        <?= ucfirst(str_replace('_', ' ', $entry['transaction_type'])) ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($entry['description'] ?? '-') ?></td>
-                                <td class="text-end text-danger"><?= $entry['debit'] > 0 ? format_currency($entry['debit']) : '-' ?></td>
-                                <td class="text-end text-success"><?= $entry['credit'] > 0 ? format_currency($entry['credit']) : '-' ?></td>
-                                <td class="text-end <?= $entry['running_balance'] > 0 ? 'text-danger' : 'text-success' ?>">
-                                    <strong><?= format_currency(abs($entry['running_balance'])) ?></strong>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <?php foreach ($display_entries as $entry): ?>
+                        <tr>
+                            <td><?= format_date($entry['date']) ?></td>
+                            <td>
+                                <?php
+                                $type_colors = ['purchase' => 'primary', 'payment' => 'success', 'return' => 'danger'];
+                                $color = $type_colors[$entry['transaction_type']] ?? 'secondary';
+                                ?>
+                                <span class="badge badge-<?= $color ?>">
+                                    <?= ucfirst(str_replace('_', ' ', $entry['transaction_type'])) ?>
+                                </span>
+                            </td>
+                            <td><?= htmlspecialchars($entry['description'] ?? '-') ?></td>
+                            <td class="text-end text-danger"><?= $entry['debit'] > 0 ? format_currency($entry['debit']) : '-' ?></td>
+                            <td class="text-end text-success"><?= $entry['credit'] > 0 ? format_currency($entry['credit']) : '-' ?></td>
+                            <td class="text-end <?= $entry['running_balance'] > 0 ? 'text-danger' : 'text-success' ?>">
+                                <strong><?= format_currency(abs($entry['running_balance'])) ?></strong>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
                 <tfoot>
                     <tr class="table-active">
-                        <th colspan="3" class="text-end">Total for Period:</th>
+                        <th></th>
+                        <th></th>
+                        <th class="text-end">Total for Period:</th>
                         <th class="text-end text-danger"><?= format_currency($total_debit) ?></th>
                         <th class="text-end text-success"><?= format_currency($total_credit) ?></th>
                         <th class="text-end <?= $final_balance > 0 ? 'text-danger' : 'text-success' ?>">
@@ -505,7 +505,7 @@ $(document).ready(function() {
         $("#ledgerTable").DataTable({
             "pageLength": 25,
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-            "order": [[0, "desc"]],
+            "ordering": false,
             "dom": "<\'row\'<\'col-sm-12 col-md-6\'l><\'col-sm-12 col-md-6\'f>>" +
                    "<\'row\'<\'col-sm-12\'tr>>" +
                    "<\'row\'<\'col-sm-12 col-md-5\'i><\'col-sm-12 col-md-7\'p>>",
